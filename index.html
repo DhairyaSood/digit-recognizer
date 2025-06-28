@@ -23,6 +23,7 @@
       background-color: white;
       cursor: crosshair;
       margin-top: 20px;
+      touch-action: none; /* prevent zoom/pan on touch devices */
     }
     #prediction {
       font-size: 22px;
@@ -70,21 +71,48 @@
     const ctx = canvas.getContext('2d');
     let drawing = false;
 
-    // Fill canvas with white background initially
+    // Initial white background
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Mouse Events
     canvas.addEventListener('mousedown', () => drawing = true);
     canvas.addEventListener('mouseup', () => drawing = false);
     canvas.addEventListener('mouseleave', () => drawing = false);
-
     canvas.addEventListener('mousemove', e => {
       if (!drawing) return;
+      draw(e.offsetX, e.offsetY);
+    });
+
+    // Touch Events
+    canvas.addEventListener('touchstart', e => {
+      drawing = true;
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      draw(x, y);
+    });
+
+    canvas.addEventListener('touchmove', e => {
+      if (!drawing) return;
+      e.preventDefault(); // stop scroll
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      draw(x, y);
+    });
+
+    canvas.addEventListener('touchend', () => drawing = false);
+    canvas.addEventListener('touchcancel', () => drawing = false);
+
+    function draw(x, y) {
       ctx.fillStyle = 'black';
       ctx.beginPath();
-      ctx.arc(e.offsetX, e.offsetY, 10, 0, Math.PI * 2);
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
       ctx.fill();
-    });
+    }
 
     function clearCanvas() {
       ctx.fillStyle = 'white';
@@ -97,15 +125,13 @@
       tempCanvas.width = 28;
       tempCanvas.height = 28;
       const tempCtx = tempCanvas.getContext('2d');
-
-      // Resize the drawing into 28x28
       tempCtx.drawImage(canvas, 0, 0, 28, 28);
       const imageData = tempCtx.getImageData(0, 0, 28, 28);
       const pixels = [];
 
       for (let i = 0; i < imageData.data.length; i += 4) {
-        const r = imageData.data[i]; // R = G = B for grayscale
-        const grayscale = 1 - r / 255; // Inverted grayscale: black = 1, white = 0
+        const r = imageData.data[i];
+        const grayscale = 1 - r / 255;
         pixels.push(grayscale);
       }
 
