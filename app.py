@@ -1,20 +1,21 @@
 from flask import Flask, request, jsonify
 import numpy as np
-from flask_cors import CORS  # Allow frontend to access backend
+from flask_cors import CORS
+import os
 
 app = Flask(__name__)
 CORS(app)
 
-# Define the base directory
-base_path = r"D:\College Work\Coding Prep\learning ai ml\deep learning\digit-recognizer"
+# Define base path as the directory where this script is located
+base_path = os.path.dirname(os.path.abspath(__file__))
 
-# Load weights and biases from saved .npy files
-W1 = np.load(fr"{base_path}\W1.npy")
-b1 = np.load(fr"{base_path}\b1.npy")
-W2 = np.load(fr"{base_path}\W2.npy")
-b2 = np.load(fr"{base_path}\b2.npy")
-W3 = np.load(fr"{base_path}\W3.npy")
-b3 = np.load(fr"{base_path}\b3.npy")
+# Load weights and biases from .npy files
+W1 = np.load(os.path.join(base_path, "W1.npy"))
+b1 = np.load(os.path.join(base_path, "b1.npy"))
+W2 = np.load(os.path.join(base_path, "W2.npy"))
+b2 = np.load(os.path.join(base_path, "b2.npy"))
+W3 = np.load(os.path.join(base_path, "W3.npy"))
+b3 = np.load(os.path.join(base_path, "b3.npy"))
 
 print("✅ W1 loaded, shape:", W1.shape, "Sample:", W1[0][:5])
 
@@ -47,7 +48,6 @@ def predict():
     predicted_digit = int(np.argmax(prediction))
     confidence = float(np.max(prediction))
 
-    # Debug info
     print("🧪 Input sum:", np.sum(X))
     print("🔎 First 10 values of input:", X[0][:10])
     print("📈 Softmax output:", prediction)
@@ -60,4 +60,4 @@ def predict():
     })
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0")
