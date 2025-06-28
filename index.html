@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Digit Recognizer</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
+    header, footer {
+      background-color: #333;
+      color: white;
+      padding: 15px 0;
+    }
+    header h1, footer p {
+      margin: 0;
+    }
+    canvas {
+      border: 2px solid black;
+      background-color: white;
+      cursor: crosshair;
+      margin-top: 20px;
+    }
+    #prediction {
+      font-size: 22px;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .about {
+      margin-top: 30px;
+      padding: 20px;
+      background: white;
+      border-top: 2px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Digit Recognizer using Neural Networks</h1>
+    <p>By Dhairya Sood – AI Enthusiast & Developer</p>
+  </header>
+
+  <canvas id="canvas" width="280" height="280"></canvas><br>
+  <button onclick="clearCanvas()">Clear</button>
+  <button onclick="submitDrawing()">Predict</button>
+  <div id="prediction"></div>
+
+  <div class="about">
+    <h2>About This Project</h2>
+    <p>This web app lets you draw digits (0–9) and predicts them using a neural network trained on the MNIST dataset. The model is implemented from scratch using NumPy, and the frontend is built with HTML and JavaScript. Flask serves the model in the backend.</p>
+    <p>Created as a part of my AI learning journey and to explore how deep learning models work end-to-end.</p>
+  </div>
+
+  <footer>
+    <p>Made with ❤ by Dhairya Sood</p>
+  </footer>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+
+    // Fill canvas with white background initially
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    canvas.addEventListener('mousedown', () => drawing = true);
+    canvas.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mouseleave', () => drawing = false);
+
+    canvas.addEventListener('mousemove', e => {
+      if (!drawing) return;
+      ctx.fillStyle = 'black';
+      ctx.beginPath();
+      ctx.arc(e.offsetX, e.offsetY, 10, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    function clearCanvas() {
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      document.getElementById('prediction').textContent = "";
+    }
+
+    function get28x28Grayscale() {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = 28;
+      tempCanvas.height = 28;
+      const tempCtx = tempCanvas.getContext('2d');
+
+      // Resize the drawing into 28x28
+      tempCtx.drawImage(canvas, 0, 0, 28, 28);
+      const imageData = tempCtx.getImageData(0, 0, 28, 28);
+      const pixels = [];
+
+      for (let i = 0; i < imageData.data.length; i += 4) {
+        const r = imageData.data[i]; // R = G = B for grayscale
+        const grayscale = 1 - r / 255; // Inverted grayscale: black = 1, white = 0
+        pixels.push(grayscale);
+      }
+
+      return pixels;
+    }
+
+    async function submitDrawing() {
+      const input = get28x28Grayscale();
+
+      const response = await fetch('http://127.0.0.1:5000/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: input })
+      });
+
+      const result = await response.json();
+      if (result.error) {
+        document.getElementById('prediction').textContent = "⚠ Error: " + result.error;
+      } else {
+        document.getElementById('prediction').textContent =
+          `Predicted Digit: ${result.digit} (Confidence: ${result.confidence}%)`;
+      }
+    }
+  </script>
+</body>
+</html>
