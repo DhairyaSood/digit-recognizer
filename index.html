@@ -42,6 +42,11 @@
       background: white;
       border-top: 2px solid #ccc;
     }
+    .instructions {
+      margin-top: 15px;
+      font-size: 16px;
+      color: #444;
+    }
   </style>
 </head>
 <body>
@@ -52,6 +57,9 @@
   </header>
 
   <canvas id="canvas" width="280" height="280"></canvas><br>
+  <div class="instructions">
+    Write your digit in the center of the box and ensure it’s reasonably sized within the area for best prediction accuracy.
+  </div>
   <button onclick="clearCanvas()">Clear</button>
   <button onclick="submitDrawing()">Predict</button>
   <div id="prediction"></div>
